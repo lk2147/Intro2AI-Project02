@@ -1,0 +1,162 @@
+import numpy as np
+from pysat import card
+
+class DisjointSet:
+    def __init__(self, num_nodes):
+        self.par = -np.ones(dtype=int, shape=num_nodes)
+        
+    def _root(self, v):
+        if self.par[v] < 0:
+            return v
+        self.par[v] = self._root(self.par[v])
+        return self.par[v]
+    
+    def join(self, u, v):
+        x = self._root(u)
+        y = self._root(v)
+        if x == y:
+            return False
+        if self.par[x] > self.par[y]:
+            self.par[x], self.par[y] = self.par[y], self.par[x]
+        self.par[x] += self.par[y]
+        self.par[y] = x
+        return True
+    
+    def is_tree(self):
+        return -self.par[self._root(0)] == self.par.shape[0]
+
+class Hashi:
+    def __init__(self, fname):
+        self.bridge_characters = ['-', '|', '=', '$']
+        self._add_CNF_constraints(self._define_logical_variables(fname))
+        
+    def _define_logical_variables(self, fname):
+        """
+        Define logical variables and related variable
+        - num_island: number of islands
+        - islands: tuple of (row, column, value) of the mapped island
+        - num_bridges: number of logical variable (bridges)
+        - bridges: pair (u, v) of islands' indices
+        - edges: vector of indices (+1) of bridges from island.
+        """
+        self.grid = np.loadtxt(fname=fname, dtype=np.uint32)
+        horiz_rows, horiz_cols = np.where(self.grid > 0)
+        
+        self.num_islands = horiz_rows.shape[0]
+        island_vals = self.grid[horiz_rows, horiz_cols]
+        self.islands = np.column_stack((horiz_rows, horiz_cols, island_vals))
+        self.grid += ord('0')
+        
+        verti_order = np.lexsort((horiz_rows, horiz_cols))
+        verti_cols = horiz_cols[verti_order]
+        
+        horiz_indices = np.arange(0, self.num_islands)
+        verti_indices = horiz_indices[verti_order]
+        
+        horiz_mask = (horiz_rows[:-1] == horiz_rows[1:])
+        verti_mask = (verti_cols[:-1] == verti_cols[1:])
+        
+        self.num_bridges = (np.sum(horiz_mask) + np.sum(verti_mask)) << 1
+        self.bridges = np.empty(dtype=int, shape=(self.num_bridges, 2))
+        self.edges = [[] for _ in range(self.num_islands)]
+        
+        bridge_indices = 0
+        for i in np.where(horiz_mask)[0]:
+            u = horiz_indices[i]
+            v = horiz_indices[i+1]
+            
+            self.bridges[bridge_indices] = (u, v)
+            bridge_indices += 1
+            self.edges[u].append(bridge_indices)
+            self.edges[v].append(bridge_indices)
+            
+            self.bridges[bridge_indices] = (v, u)
+            bridge_indices += 1
+            self.edges[v].append(bridge_indices)
+            self.edges[u].append(bridge_indices)
+
+        split_index = bridge_indices
+        for i in np.where(verti_mask)[0]:
+            u = verti_indices[i]
+            v = verti_indices[i+1]
+            
+            self.bridges[bridge_indices] = (u, v)
+            bridge_indices += 1
+            self.edges[u].append(bridge_indices)
+            self.edges[v].append(bridge_indices)
+            
+            self.bridges[bridge_indices] = (v, u)
+            bridge_indices += 1
+            self.edges[v].append(bridge_indices)
+            self.edges[u].append(bridge_indices)
+        return split_index
+    
+    def _add_CNF_constraints(self, split_index):
+        """
+        Generate CNF constraints (exclude the connected component constraint)
+        """
+        self._add_double_bridges()
+        self._add_crossing_bridges(split_index)
+        self._add_total_bridges()
+    
+    def _add_double_bridges(self):
+        self.CNFs = [[i+1, -i-2] for i in range(0, self.num_bridges, 2)]
+    
+    def _add_crossing_bridges(self, split_index):
+        for i in range(0, split_index, 2):
+            for j in range(split_index, self.num_bridges, 2):
+                if self._is_crossing(self.bridges[i], self.bridges[j]):
+                    self.CNFs.append([-i-1, -j-1])
+    
+    def _add_total_bridges(self):
+        top_index = self.num_bridges
+        for i in range(self.num_islands):
+            sum_cnfs = card.CardEnc.equals(lits=self.edges[i], bound=self.islands[i][2], top_id=top_index)
+            top_index = sum_cnfs.nv
+            for c in sum_cnfs.clauses:
+                if c not in self.CNFs:
+                    self.CNFs.append(c)
+
+    def _is_crossing(self, horiz_bridge, verti_bridge):
+        a, b = horiz_bridge
+        c, d = verti_bridge
+        return  self.islands[c][0] < self.islands[a][0] < self.islands[d][0] and \
+                self.islands[a][1] < self.islands[c][1] < self.islands[b][1]
+    
+    def _resolve_bridge(self, r, c, dr, dc, n, bridge_flag):
+        rows = r + np.arange(1, n) * dr
+        cols = c + np.arange(1, n) * dc
+        self.grid[rows, cols] = ord(self.bridge_characters[bridge_flag])
+    
+    def get_CNFs(self):
+        return self.CNFs.copy()
+    
+    def is_singly_connected_component(self, result):
+        dsu = DisjointSet(self.num_islands)
+        for i in range(0, self.num_bridges, 2):
+            if result[i] > 0:
+                u, v = self.bridges[i]
+                dsu.join(u, v)
+        return dsu.is_tree()
+
+    def print_solution(self, result):
+        for i in range(0, self.num_bridges, 2):
+            if result[i] < 0:
+                continue
+            u, v = self.bridges[i]
+            r = self.islands[u][0]
+            c = self.islands[u][1]
+            dr = self.islands[v][0] - r
+            dc = self.islands[v][1] - c
+            n = dr + dc
+            if dr > 0:
+                dr = 1
+            else:
+                dc = 1
+            bridge_flag = 1 if dr > 0 else 0
+            if result[i+1] > 0:
+                bridge_flag |= 2
+            self._resolve_bridge(r, c, dr, dc, n, bridge_flag)
+        print(self.grid.view('U1'))
+
+h = Hashi("input-01.txt")
