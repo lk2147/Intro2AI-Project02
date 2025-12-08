@@ -129,7 +129,7 @@ class Hashi:
         self.grid[rows, cols] = ord(self.bridge_characters[bridge_flag])
     
     def get_CNFs(self):
-        return self.CNFs.copy()
+        return self.num_bridges,self.CNFs.copy()
     
     def is_singly_connected_component(self, result):
         dsu = DisjointSet(self.num_islands)
@@ -140,6 +140,8 @@ class Hashi:
         return dsu.is_tree()
 
     def print_solution(self, result):
+        if len(result) < self.num_bridges:
+            return
         for i in range(0, self.num_bridges, 2):
             if result[i] < 0:
                 continue
@@ -158,5 +160,3 @@ class Hashi:
                 bridge_flag |= 2
             self._resolve_bridge(r, c, dr, dc, n, bridge_flag)
         print(self.grid.view('U1'))
-
-h = Hashi("input-01.txt")
