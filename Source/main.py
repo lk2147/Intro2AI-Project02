@@ -1,8 +1,15 @@
 from Backtracking import Backtracking
+from Bruteforce import Bruteforce
 
 if __name__ == "__main__":
-    solver = Backtracking("D:\\ai\\hashi\\Source\\Inputs\\input-03.txt")
-    if solver.solve():
-        solver.print_hashi()
+    fname = "D:\\ai\\hashi\\Source\\Inputs\\input-02.txt"
+    bt = Backtracking(fname)
+    # bf = Bruteforce(fname)
+    if bt.solve():
+        bt.print_hashi()
     else:
-        print("No solution")
+        print("BT NO SOL")
+    # if bf.solve():
+    #     bf.print_hashi()
+    # else:
+    #     print("BF NO SOL")
