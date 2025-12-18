@@ -98,6 +98,10 @@ class Hashi:
         self._add_double_bridges()
         self._add_crossing_bridges(split_index)
         self._add_total_bridges()
+        self._add_neighbor_capacity_constraints()
+        if self.num_islands > 2:
+            self._add_isolation_constraints()
+        self._remove_duplicates()
     
     def _add_double_bridges(self):
         self.CNFs = [[i+1, -i-2] for i in range(0, self.num_bridges, 2)]
@@ -108,6 +112,12 @@ class Hashi:
                 if self._is_crossing(self.bridges[i], self.bridges[j]):
                     self.CNFs.append([-i-1, -j-1])
     
+    def _is_crossing(self, horiz_bridge, verti_bridge):
+        a, b = horiz_bridge
+        c, d = verti_bridge
+        return  self.islands[c][0] < self.islands[a][0] < self.islands[d][0] and \
+                self.islands[a][1] < self.islands[c][1] < self.islands[b][1]
+    
     def _add_total_bridges(self):
         top_index = self.num_bridges
         for i in range(self.num_islands):
@@ -116,12 +126,48 @@ class Hashi:
             for c in sum_cnfs.clauses:
                 if c not in self.CNFs:
                     self.CNFs.append(c)
+    
+    def _add_neighbor_capacity_constraints(self):
+        for i in range(self.num_islands):
+            val = self.islands[i][2]
+            neighbor_vars = self.edges[i]
+            num_neighbors = len(neighbor_vars) // 2
+            
+            if num_neighbors == 0:
+                continue
 
-    def _is_crossing(self, horiz_bridge, verti_bridge):
-        a, b = horiz_bridge
-        c, d = verti_bridge
-        return  self.islands[c][0] < self.islands[a][0] < self.islands[d][0] and \
-                self.islands[a][1] < self.islands[c][1] < self.islands[b][1]
+            if val == 2 * num_neighbors:
+                for k in range(1, len(neighbor_vars), 2):
+                    double_bridge_lit = neighbor_vars[k] 
+                    self.CNFs.append([double_bridge_lit]) 
+
+            elif val == 2 * num_neighbors - 1:
+                for k in range(0, len(neighbor_vars), 2):
+                    single_bridge_lit = neighbor_vars[k]
+                    self.CNFs.append([single_bridge_lit])
+
+    def _add_isolation_constraints(self):
+        for i in range(0, self.num_bridges, 2):
+            u, v = self.bridges[i]
+            val_u = self.islands[u][2]
+            val_v = self.islands[v][2]
+
+            if val_u == 1 and val_v == 1:
+                self.CNFs.append([-(i + 1)])
+
+            if val_u == 2 and val_v == 2:
+                self.CNFs.append([-(i + 2)])
+
+    def _remove_duplicates(self):
+        unique_clauses = set()
+        
+        for clause in self.CNFs:
+            sorted_clause = tuple(sorted(clause))
+            unique_clauses.add(sorted_clause)
+        
+        self.CNFs = [list(c) for c in unique_clauses]
+        
+        print(f"Duplicates removed. Remaining clauses: {len(self.CNFs)}")
     
     def _resolve_bridge(self, r, c, dr, dc, n, bridge_flag):
         rows = r + np.arange(1, n) * dr
