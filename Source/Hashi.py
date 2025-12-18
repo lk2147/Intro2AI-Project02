@@ -27,6 +27,7 @@ class DisjointSet:
 
 class Hashi:
     def __init__(self, fname):
+        np.set_printoptions(linewidth=np.inf)
         self.bridge_characters = ['-', '|', '=', '$']
         self._add_CNF_constraints(self._define_logical_variables(fname))
         
@@ -37,7 +38,7 @@ class Hashi:
         - islands: tuple of (row, column, value) of the mapped island
         - num_bridges: number of logical variable (bridges)
         - bridges: pair (u, v) of islands' indices
-        - edges: vector of indices (+1) of bridges from island.
+        - edges: vector of indices (plus 1) of bridges from island.
         """
         self.grid = np.loadtxt(fname=fname, dtype=np.uint32)
         horiz_rows, horiz_cols = np.where(self.grid > 0)
@@ -62,33 +63,21 @@ class Hashi:
         
         bridge_indices = 0
         for i in np.where(horiz_mask)[0]:
-            u = horiz_indices[i]
-            v = horiz_indices[i+1]
-            
-            self.bridges[bridge_indices] = (u, v)
-            bridge_indices += 1
-            self.edges[u].append(bridge_indices)
-            self.edges[v].append(bridge_indices)
-            
-            self.bridges[bridge_indices] = (v, u)
-            bridge_indices += 1
-            self.edges[v].append(bridge_indices)
-            self.edges[u].append(bridge_indices)
+            u, v = horiz_indices[i:i+2]
+            for _ in range(2):
+                self.bridges[bridge_indices] = (u, v)
+                bridge_indices += 1
+                self.edges[u].append(bridge_indices)
+                self.edges[v].append(bridge_indices)
 
         split_index = bridge_indices
         for i in np.where(verti_mask)[0]:
-            u = verti_indices[i]
-            v = verti_indices[i+1]
-            
-            self.bridges[bridge_indices] = (u, v)
-            bridge_indices += 1
-            self.edges[u].append(bridge_indices)
-            self.edges[v].append(bridge_indices)
-            
-            self.bridges[bridge_indices] = (v, u)
-            bridge_indices += 1
-            self.edges[v].append(bridge_indices)
-            self.edges[u].append(bridge_indices)
+            u, v = verti_indices[i:i+2]
+            for _ in range(2):
+                self.bridges[bridge_indices] = (u, v)
+                bridge_indices += 1
+                self.edges[u].append(bridge_indices)
+                self.edges[v].append(bridge_indices)
         return split_index
     
     def _add_CNF_constraints(self, split_index):
@@ -123,9 +112,7 @@ class Hashi:
         for i in range(self.num_islands):
             sum_cnfs = card.CardEnc.equals(lits=self.edges[i], bound=self.islands[i][2], top_id=top_index)
             top_index = sum_cnfs.nv
-            for c in sum_cnfs.clauses:
-                if c not in self.CNFs:
-                    self.CNFs.append(c)
+            self.CNFs.extend(sum_cnfs.clauses)
     
     def _add_neighbor_capacity_constraints(self):
         for i in range(self.num_islands):
@@ -139,7 +126,7 @@ class Hashi:
             if val == 2 * num_neighbors:
                 for k in range(1, len(neighbor_vars), 2):
                     double_bridge_lit = neighbor_vars[k] 
-                    self.CNFs.append([double_bridge_lit]) 
+                    self.CNFs.append([double_bridge_lit])
 
             elif val == 2 * num_neighbors - 1:
                 for k in range(0, len(neighbor_vars), 2):
