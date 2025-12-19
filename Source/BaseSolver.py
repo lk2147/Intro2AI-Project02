@@ -4,7 +4,9 @@ from Hashi import Hashi
 class BaseSolver(ABC):
     def __init__(self, fname):
         self.hashi = Hashi(fname)
-        self.solution = []
+        self.num_variables = self.hashi.get_number_of_variables()
+        self.cnfs = self.hashi.get_CNFs()
+        self.solution = None
     
     @abstractmethod
     def solve():

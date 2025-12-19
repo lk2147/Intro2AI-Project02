@@ -41,17 +41,11 @@ class CNFState:
 class AStarSolver(BaseSolver):
     def __init__(self, fname):
         super().__init__(fname)
-        
-        # 1. Retrieve CNF data from Hashi
-        # num_vars: Total number of variables
-        # cnf_clauses: List of clauses, e.g., [[1, -2], [-1, 3], ...]
-        self.num_vars, self.cnf_clauses = self.hashi.get_CNFs()
-        
         # 2. Pre-processing - Optimize access speed
         # Map: Variable -> List of indices of clauses containing that variable
         # Example: self.var_to_clauses[1] = [0, 5, 8] (Variable 1 appears in clauses 0, 5, 8)
         self.var_to_clauses = defaultdict(list)
-        for idx, clause in enumerate(self.cnf_clauses):
+        for idx, clause in enumerate(self.cnfs):
             for lit in clause:
                 self.var_to_clauses[abs(lit)].append(idx)
 
@@ -61,7 +55,7 @@ class AStarSolver(BaseSolver):
         # --- INITIALIZATION ---
         initial_assignment = {}
         # Initially, all clauses are unsatisfied
-        all_clause_indices = set(range(len(self.cnf_clauses)))
+        all_clause_indices = set(range(len(self.cnfs)))
         # print(all_clause_indices)
         
         # Perform Unit Propagation from the start (handle existing unit clauses)
@@ -163,7 +157,7 @@ class AStarSolver(BaseSolver):
             
             # Iterate through unsatisfied clauses
             for idx in curr_unsatisfied:
-                clause = self.cnf_clauses[idx]
+                clause = self.cnfs[idx]
                 
                 unassigned_lits = []
                 is_satisfied = False
@@ -230,7 +224,7 @@ class AStarSolver(BaseSolver):
         affected_clauses = current_unsatisfied
         
         for idx in affected_clauses:
-            clause = self.cnf_clauses[idx]
+            clause = self.cnfs[idx]
             
             # Check clause status
             is_satisfied = False
@@ -281,7 +275,7 @@ class AStarSolver(BaseSolver):
         candidates = []
         
         for idx in state.unsatisfied_indices:
-            clause = self.cnf_clauses[idx]
+            clause = self.cnfs[idx]
             
             # Count number of unassigned literals in this clause
             unassigned = [lit for lit in clause if abs(lit) not in state.assignment]
@@ -309,7 +303,7 @@ class AStarSolver(BaseSolver):
     def _build_solution_list(self, assignment):
         """Convert dict {1:True, 2:False} to list [1, -2, ...]"""
         sol = []
-        for i in range(1, self.num_vars + 1):
+        for i in range(1, self.num_variables + 1):
             val = assignment.get(i, False) # Default to False if variable is insignificant
             if val:
                 sol.append(i)

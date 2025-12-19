@@ -1,145 +1,108 @@
 from BaseSolver import BaseSolver
-import sys
-import time
+from sys import setrecursionlimit as set_stack_limit
+from time import time as set_clock
 
 class Backtracking(BaseSolver):
-    def __init__(self, fname):
+    def __init__(self, fname, max_iterations = 10):
         super().__init__(fname)
-        self.num_bridges, self.cnf = self.hashi.get_CNFs()
-        # Increase recursion limit for deep search trees in difficult puzzles
-        sys.setrecursionlimit(20000)
+        self.max_iterations = max_iterations
+        set_stack_limit(200000)
 
     def solve(self):
-        start_time = time.time()
-        current_clauses = [set(c) for c in self.cnf]
-        iteration_count = 0
-
-        while True:
-            iteration_count += 1
-            raw_assignment = self._dpll(current_clauses, [])
-
-            if raw_assignment is None:
+        """
+        Use DPLL and unit propagation to solve CNF.Add cut set constraints when failed.
+        """
+        if self.num_variables == 0:
+            print("Empty CNF.")
+            return True
+        
+        start_time = set_clock()
+        for _ in range(self.max_iterations):
+            self.solution = self._DPLL(self.cnfs.copy(), [])
+            if self.solution is None:
                 return False
-
-            assigned_map = {abs(x): x for x in raw_assignment}
-            full_model = []
-            for i in range(1, self.num_bridges + 1):
-                val = assigned_map.get(i, -i)
-                full_model.append(val)
-
-            components = self.hashi.get_components(full_model)
-
-            if len(components) == 1:
-                end_time = time.time()
-                self.solution = full_model
-                print(f"Solution found in {end_time - start_time:.4f} seconds.")
+            
+            self.solution.sort(key=lambda x: abs(x))
+            blocking_clause = self.hashi.get_cut_set(self.solution)
+            if blocking_clause is None:
+                end_time = set_clock()
+                print(f"Solution found in {end_time - start_time:.4f} seconds after {_+1} iterations.")
                 return True
             else:
-                S = components[0]
-                
-                # Tìm tập cắt: Những cạnh có thể giúp S thoát khỏi cô lập
-                cut_vars = self.hashi.get_cut_set_vars(S)
-                
-                # blocking_clause = (x1 v x2 v ... v xn)
-                if cut_vars:
-                    blocking_clause = set(cut_vars)
-                    current_clauses.append(blocking_clause)
-                else:
-                    return False
-
-    def _dpll(self, clauses, assignment):
+                self.cnfs.append(blocking_clause)
+            
+    def _DPLL(self, clauses, assignment):
         """
-        Recursive DPLL with Unit Propagation.
-        Does NOT check connectivity; purely solves the SAT boolean math.
+        Fold unit propagation into backtracking via DPLL.
         """
-        # Unit Propagation 
-        while True:
-            unit_lit = None
+        while clauses:
+            unit_literal = 0
             for clause in clauses:
                 if len(clause) == 1:
-                    unit_lit = list(clause)[0]
-                    break    
-
-            if unit_lit is None:
+                    unit_literal = clause[0]
+                    break
+            if unit_literal == 0:
                 break
-
-            assignment = assignment + [unit_lit]
-
+            assignment += [unit_literal]
             new_clauses = []
-
-            for clause in clauses:
-                if unit_lit in clause:
-                    continue 
-                if -unit_lit in clause:
-                    c_copy = clause.copy()
-                    c_copy.remove(-unit_lit)
-                    if not c_copy:
+            for old_clause in clauses:
+                if unit_literal in old_clause:
+                    continue
+                if -unit_literal in old_clause:
+                    if len(old_clause) == 1:
                         return None
-                    new_clauses.append(c_copy)
+                    updated_clause = old_clause.copy()
+                    updated_clause.remove(-unit_literal)
+                    new_clauses.append(updated_clause)
                 else:
-                    new_clauses.append(clause)
+                    new_clauses.append(old_clause)
             clauses = new_clauses
-
         if not clauses:
-            return assignment 
+            return assignment
 
         literal_counts = {}
-        min_len = (1 << 63)
-        for c in clauses:
-            if len(c) < min_len:
-                min_len = len(c)
-        
-        for c in clauses:
-            if len(c) == min_len:
-                for lit in c:
-                    literal_counts[lit] = literal_counts.get(lit, 0) + 1
-        
-        if not literal_counts:
-            return assignment
-            
-        chosen_lit = max(literal_counts, key=literal_counts.get)
-        
-        # Branch 1: Try True
-        clauses_true = []
-        possible_conflict = False
-
+        minimum_length = (1 << 63)
         for clause in clauses:
-            if chosen_lit in clause:
+            n = len(clause)
+            if len(clause) < minimum_length:
+                minimum_length = n
+        for clause in clauses:
+            if len(clause) != minimum_length:
                 continue
-            if -chosen_lit in clause:
-                c_copy = clause.copy()
-                c_copy.remove(-chosen_lit)
-                if not c_copy:
-                    possible_conflict = True
-                    break
-                clauses_true.append(c_copy)
-            else:
-                clauses_true.append(clause)
+            for unit_literal in clause:
+                literal_counts[unit_literal] = literal_counts.get(unit_literal, 0) + 1
+        chosen_literal = max(literal_counts, key=literal_counts.get)
         
-        if not possible_conflict:
-            res = self._dpll(clauses_true, assignment + [chosen_lit])
-            if res is not None:
-                return res
-
-        # Branch 2: Try False
-        neg_lit = -chosen_lit
-        clauses_false = []
-        possible_conflict = False
-        for clause in clauses:
-            if neg_lit in clause: continue
-            if -neg_lit in clause:
-                c_copy = clause.copy()
-                c_copy.remove(-neg_lit)
-                if not c_copy:
-                    possible_conflict = True
-                    break
-                clauses_false.append(c_copy)
-            else:
-                clauses_false.append(clause)
-
-        if not possible_conflict:
-            res = self._dpll(clauses_false, assignment + [neg_lit])
-            if res is not None:
-                return res
-        
-        return None
+        branch_flag = 3
+        true_branch = []
+        false_branch = []
+        for old_clause in clauses:
+            if branch_flag == 0:
+                return None
+            positive = (chosen_literal in old_clause)
+            negative = (-chosen_literal in old_clause)
+            if not positive and (branch_flag & 1):
+                if negative:
+                    if len(old_clause) == 1:
+                        branch_flag = branch_flag ^ 1
+                    else:
+                        updated_clause = old_clause.copy()
+                        updated_clause.remove(-chosen_literal)
+                        true_branch.append(updated_clause)
+                else:
+                    true_branch.append(old_clause)
+            if not negative and (branch_flag & 2):
+                if positive:
+                    if len(old_clause) == 1:
+                        branch_flag = branch_flag ^ 2
+                    else:
+                        updated_clause = old_clause.copy()
+                        updated_clause.remove(chosen_literal)
+                        false_branch.append(updated_clause)
+                else:
+                    false_branch.append(old_clause)
+        if (branch_flag & 1):
+            ret = self._DPLL(true_branch, assignment + [chosen_literal])
+            if ret is not None:
+                return ret
+        return self._DPLL(false_branch, assignment + [-chosen_literal]) if (branch_flag & 2) else None

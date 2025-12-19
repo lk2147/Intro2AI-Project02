@@ -11,9 +11,9 @@ class DisjointSet:
         self.par[v] = self._root(self.par[v])
         return self.par[v]
     
-    def join(self, u, v):
-        x = self._root(u)
-        y = self._root(v)
+    def join(self, edge):
+        x = self._root(edge[0])
+        y = self._root(edge[1])
         if x == y:
             return False
         if self.par[x] > self.par[y]:
@@ -24,6 +24,14 @@ class DisjointSet:
     
     def is_tree(self):
         return -self.par[self._root(0)] == self.par.shape[0]
+    
+    def get_root_of_the_largest_componet(self):
+        return np.argmin(self.par)
+    
+    def is_connective_edge(self, root, edge):
+        x = self._root(edge[0])
+        y = self._root(edge[1])
+        return x != y and (x == root or y == root)
 
 class Hashi:
     def __init__(self, fname):
@@ -138,22 +146,17 @@ class Hashi:
             u, v = self.bridges[i]
             val_u = self.islands[u][2]
             val_v = self.islands[v][2]
-
             if val_u == 1 and val_v == 1:
-                self.CNFs.append([-(i + 1)])
-
+                self.CNFs.append([-i-1])
             if val_u == 2 and val_v == 2:
-                self.CNFs.append([-(i + 2)])
+                self.CNFs.append([-i-2])
 
     def _remove_duplicates(self):
         unique_clauses = set()
-        
         for clause in self.CNFs:
             sorted_clause = tuple(sorted(clause))
             unique_clauses.add(sorted_clause)
-        
         self.CNFs = [list(c) for c in unique_clauses]
-        
         print(f"Duplicates removed. Remaining clauses: {len(self.CNFs)}")
     
     def _resolve_bridge(self, r, c, dr, dc, n, bridge_flag):
@@ -161,16 +164,37 @@ class Hashi:
         cols = c + np.arange(1, n) * dc
         self.grid[rows, cols] = ord(self.bridge_characters[bridge_flag])
     
+    def get_number_of_variables(self):
+        return self.num_bridges
+    
     def get_CNFs(self):
-        return self.num_bridges,self.CNFs.copy()
+        return self.CNFs.copy()
     
     def is_singly_connected_component(self, result):
         dsu = DisjointSet(self.num_islands)
         for i in range(0, self.num_bridges, 2):
             if result[i] > 0:
-                u, v = self.bridges[i]
-                dsu.join(u, v)
+                dsu.join(self.bridges[i])
         return dsu.is_tree()
+
+    def get_cut_set(self, result):
+        """
+        Check if the solution form one connected component.\
+        Return a cut set for the larget component if it is not.
+        """
+        dsu = DisjointSet(self.num_islands)
+        for i in range(0, self.num_bridges, 2):
+            if result[i] > 0:
+                dsu.join(self.bridges[i])
+        if dsu.is_tree():
+            return None
+        
+        cut_set = []
+        root = dsu.get_root_of_the_largest_componet()
+        for i in range(0, self.num_bridges, 2):
+            if result[i] < 0 and dsu.is_connective_edge(root, self.bridges[i]):
+                cut_set.append(i + 1)
+        return cut_set
 
     def print_solution(self, result):
         if len(result) < self.num_bridges:
@@ -193,36 +217,3 @@ class Hashi:
                 bridge_flag |= 2
             self._resolve_bridge(r, c, dr, dc, n, bridge_flag)
         print(self.grid.view('U1'))
-
-    def get_components(self, result):
-        """
-        Dựa trên kết quả SAT, trả về danh sách các thành phần liên thông.
-        Mỗi thành phần là một list chứa index của các đảo.
-        """
-        dsu = DisjointSet(self.num_islands)
-        for i in range(0, self.num_bridges, 2):
-            if result[i] > 0:
-                u, v = self.bridges[i]
-                dsu.join(u, v)
-        
-        components = {}
-        for i in range(self.num_islands):
-            root = dsu._root(i)
-            if root not in components:
-                components[root] = []
-            components[root].append(i)
-        return list(components.values())
-
-    def get_cut_set_vars(self, component_islands):
-        """
-        Tìm tất cả các biến SAT đại diện cho các cạnh tiềm năng nối 
-        từ nhóm đảo 'component_islands' ra các đảo bên ngoài.
-        """
-        s_set = set(component_islands)
-        cut_set_vars = []
-        
-        for i in range(0, self.num_bridges, 2):
-            u, v = self.bridges[i]
-            if (u in s_set and v not in s_set) or (u not in s_set and v in s_set):
-                cut_set_vars.append(i + 1)
-        return cut_set_vars
