@@ -10,7 +10,7 @@ class Backtracking(BaseSolver):
 
     def solve(self):
         """
-        Use DPLL and unit propagation to solve CNF.Add cut set constraints when failed.
+        Use DPLL and unit propagation to solve CNF. Add cut set constraints when failed.
         """
         if self.num_variables == 0:
             print("Empty CNF.")
@@ -28,8 +28,10 @@ class Backtracking(BaseSolver):
                 end_time = set_clock()
                 print(f"Solution found in {end_time - start_time:.4f} seconds after {_+1} iterations.")
                 return True
-            else:
+            elif blocking_clause:
                 self.cnfs.append(blocking_clause)
+            else:
+                return False
             
     def _DPLL(self, clauses, assignment):
         """

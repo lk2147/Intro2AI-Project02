@@ -118,7 +118,12 @@ class Hashi:
     def _add_total_bridges(self):
         top_index = self.num_bridges
         for i in range(self.num_islands):
-            sum_cnfs = card.CardEnc.equals(lits=self.edges[i], bound=self.islands[i][2], top_id=top_index)
+            deg = self.islands[i][2]
+            max_possible = 2 * len(self.edges[i])
+            if max_possible < deg:
+                print(f"Invalid input: island at {self.islands[i][:2]} needs {deg} bridges but can have at most {max_possible}.")
+                exit()
+            sum_cnfs = card.CardEnc.equals(lits=self.edges[i], bound=deg, top_id=top_index)
             top_index = sum_cnfs.nv
             self.CNFs.extend(sum_cnfs.clauses)
     
