@@ -193,3 +193,36 @@ class Hashi:
                 bridge_flag |= 2
             self._resolve_bridge(r, c, dr, dc, n, bridge_flag)
         print(self.grid.view('U1'))
+
+    def get_components(self, result):
+        """
+        Dựa trên kết quả SAT, trả về danh sách các thành phần liên thông.
+        Mỗi thành phần là một list chứa index của các đảo.
+        """
+        dsu = DisjointSet(self.num_islands)
+        for i in range(0, self.num_bridges, 2):
+            if result[i] > 0:
+                u, v = self.bridges[i]
+                dsu.join(u, v)
+        
+        components = {}
+        for i in range(self.num_islands):
+            root = dsu._root(i)
+            if root not in components:
+                components[root] = []
+            components[root].append(i)
+        return list(components.values())
+
+    def get_cut_set_vars(self, component_islands):
+        """
+        Tìm tất cả các biến SAT đại diện cho các cạnh tiềm năng nối 
+        từ nhóm đảo 'component_islands' ra các đảo bên ngoài.
+        """
+        s_set = set(component_islands)
+        cut_set_vars = []
+        
+        for i in range(0, self.num_bridges, 2):
+            u, v = self.bridges[i]
+            if (u in s_set and v not in s_set) or (u not in s_set and v in s_set):
+                cut_set_vars.append(i + 1)
+        return cut_set_vars
