@@ -3,7 +3,7 @@ from Bruteforce import Bruteforce
 from AStarSolver import AStarSolver
 
 if __name__ == "__main__":
-    fname = "Source/Inputs/input-08.txt"
+    fname = "Source/Inputs/input-09.txt"
     
     # bf = Bruteforce(fname)
     # if bf.solve():

@@ -58,12 +58,13 @@ class Hashi:
         
         verti_order = np.lexsort((horiz_rows, horiz_cols))
         verti_cols = horiz_cols[verti_order]
+        verti_rows = horiz_rows[verti_order]
         
         horiz_indices = np.arange(0, self.num_islands)
         verti_indices = horiz_indices[verti_order]
         
-        horiz_mask = (horiz_rows[:-1] == horiz_rows[1:])
-        verti_mask = (verti_cols[:-1] == verti_cols[1:])
+        horiz_mask = (horiz_rows[:-1] == horiz_rows[1:]) & (horiz_cols[:-1] + 1 < horiz_cols[1:])
+        verti_mask = (verti_cols[:-1] == verti_cols[1:]) & (verti_rows[:-1] + 1 < verti_rows[1:])
         
         self.num_bridges = (np.sum(horiz_mask) + np.sum(verti_mask)) << 1
         self.bridges = np.empty(dtype=int, shape=(self.num_bridges, 2))
@@ -119,7 +120,7 @@ class Hashi:
         top_index = self.num_bridges
         for i in range(self.num_islands):
             deg = self.islands[i][2]
-            max_possible = 2 * len(self.edges[i])
+            max_possible = len(self.edges[i])
             if max_possible < deg:
                 print(f"Invalid input: island at {self.islands[i][:2]} needs {deg} bridges but can have at most {max_possible}.")
                 exit()

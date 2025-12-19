@@ -35,7 +35,7 @@ class Backtracking(BaseSolver):
             
     def _DPLL(self, clauses, assignment):
         """
-        Fold unit propagation into backtracking via DPLL.
+        Fold unit propagation into backtracking via DPLL and parallel pre-processing.
         """
         while clauses:
             unit_literal = 0
