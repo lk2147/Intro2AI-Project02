@@ -223,3 +223,28 @@ class Hashi:
                 bridge_flag |= 2
             self._resolve_bridge(r, c, dr, dc, n, bridge_flag)
         print(self.grid.view('U1'))
+    
+    def export_cnf(self, output_filename):
+        """
+        Export the CNF clauses to a DIMACS format file.
+        """
+        max_var = 0
+        for clause in self.CNFs:
+            for literal in clause:
+                if abs(literal) > max_var:
+                    max_var = abs(literal)
+        
+        num_clauses = len(self.CNFs)
+
+        try:
+            with open(output_filename, 'w') as f:
+                f.write(f"p cnf {max_var} {num_clauses}\n")
+                
+                for clause in self.CNFs:
+                    line = " ".join(map(str, clause))
+                    f.write(f"{line} 0\n")
+            
+            print(f"Wrote CNF to {output_filename} successfully.")
+            
+        except IOError as e:
+            print(f"An error occurred while writing to the file: {e}")
