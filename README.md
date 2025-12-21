@@ -36,7 +36,7 @@ Dự án triển khai 4 thuật toán chính để so sánh:
     ├── Summary/            # Các file .csv lưu thống kê Time, Memory, Stats
     └── Visualization/      # Ảnh biểu đồ so sánh (.png)
 ```
-*Note*: Ngoài ra còn 1 file **auto-run.py** tự động chạy tất cả các thuật toán
+**Note**: Ngoài ra còn 1 file **auto-run.py** tự động chạy tất cả các thuật toán
 ---
 
 ## 3. Cài đặt môi trường
