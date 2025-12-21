@@ -10,7 +10,7 @@ import shutil
 from Bruteforce import Bruteforce
 from Backtracking import Backtracking
 from AStarSolver import AStarSolver
-# from PySATSolver import PySATSolver
+from PySATSolver import PySATSolver
 
 def get_solver(algorithm, fname):
     if algorithm == 'bruteforce':
@@ -19,8 +19,8 @@ def get_solver(algorithm, fname):
         return Backtracking(fname)
     elif algorithm == 'astar':
         return AStarSolver(fname)
-    # elif algorithm == 'pysat':
-        # return PySATSolver(fname)
+    elif algorithm == 'pysat':
+        return PySATSolver(fname)
     else:
         raise ValueError(f"Unknown algorithm: {algorithm}")
 
@@ -198,6 +198,8 @@ def main():
     # Lấy thông số đặc thù của từng thuật toán
     metric_val = None
     if args.algorithm == 'astar' and hasattr(solver, 'nodes_expanded'):
+        metric_val = solver.nodes_expanded
+    elif args.algorithm == 'pysat' and hasattr(solver, 'nodes_expanded'):
         metric_val = solver.nodes_expanded
 
     # 3. Kết quả
