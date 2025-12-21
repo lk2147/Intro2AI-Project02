@@ -1,6 +1,6 @@
 Input File,Bruteforce,Backtracking,AStar,PySAT
-input-01.txt,,7.4386,1.6603,0.0902
-input-02.txt,,8.9539,1.9134,0.1045
+input-01.txt,,7.4386,1.6769,0.0902
+input-02.txt,,8.9539,1.9349,0.1045
 input-03.txt,,14.7953,2.8245,0.1121
 input-04.txt,,19.1867,4.3933,0.1203
 input-05.txt,,22.1692,5.5945,0.1259
