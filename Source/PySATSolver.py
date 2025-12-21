@@ -3,16 +3,10 @@ from BaseSolver import BaseSolver
 
 class PySATSolver(BaseSolver):
     def __init__(self, fname):
-        """
-        Initialize SAT Solver and use Glucose4.
-        """
         super().__init__(fname)
         self.nodes_expanded = 0 
 
     def solve(self):
-        """
-        Implement SAT Solver.
-        """
         solver = Glucose4()
         for clause in self.cnfs:
             solver.add_clause(clause)  
