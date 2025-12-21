@@ -18,7 +18,7 @@ Dự án này tập trung vào việc giải quyết trò chơi logic **Hashiwok
 Dự án triển khai 4 thuật toán chính để so sánh:
 -   **Bruteforce:** Tìm kiếm vét cạn kết hợp kiểm tra ràng buộc.
 -   **Backtracking (DPLL):** Quay lui kết hợp lan truyền đơn vị dựa trên mệnh đề logic dạng chuẩn hội.
--   **A\* Search:** Tìm kiếm tối ưu với hàm heuristic dựa trên số lượng mệnh đè chưa thỏa mãn.
+-   **A\* Search:** Tìm kiếm tối ưu với hàm heuristic dựa trên số lượng mệnh đề chưa thỏa mãn.
 -   **PySAT:** Sử dụng thư viện SAT solver của python để giải quyết bài toán biểu diễn ở dạng chuẩn hội.
 
 
