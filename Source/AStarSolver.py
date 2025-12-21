@@ -73,14 +73,14 @@ class AStarSolver(BaseSolver):
         open_set = []
         heapq.heappush(open_set, start_node)
         
-        nodes_explored = 0
+        self.nodes_expanded = 0
         
         print("Start searching with A*...")
 
         # --- MAIN LOOP ---
         while open_set:
             current = heapq.heappop(open_set)
-            nodes_explored += 1
+            self.nodes_expanded += 1
             
             # --- 1. GOAL CHECK ---
             if current.h == 0:
@@ -92,9 +92,7 @@ class AStarSolver(BaseSolver):
                 # Since CNF only ensures local logic, we need to check if the graph is connected.
                 if self.hashi.is_singly_connected_component(solution_list):
                     self.solution = solution_list
-                    end_time = time.time()
-                    print(f"Solution found in {end_time - start_time:.4f}s.")
-                    print(f"Nodes explored: {nodes_explored}")
+                    # print(f"Nodes explored: {nodes_explored}")
                     return True
                 else:
                     # If not connected -> This solution is invalid graph-wise -> Skip

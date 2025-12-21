@@ -35,6 +35,7 @@ class DisjointSet:
 
 class Hashi:
     def __init__(self, fname):
+        self.fname = fname
         np.set_printoptions(linewidth=np.inf)
         self.bridge_characters = ['-', '|', '=', '$']
         self._add_CNF_constraints(self._define_logical_variables(fname))
@@ -203,8 +204,12 @@ class Hashi:
         return cut_set
 
     def print_solution(self, result):
+        # output_file = self.fname.replace("Inputs", "Outputs").replace("input", "output")
+        self.export_cnf("Outputs/constraints.cnf")
+        output_file = "Outputs/solution.txt"
         if len(result) < self.num_bridges:
             return
+
         for i in range(0, self.num_bridges, 2):
             if result[i] < 0:
                 continue
@@ -222,7 +227,27 @@ class Hashi:
             if result[i+1] > 0:
                 bridge_flag |= 2
             self._resolve_bridge(r, c, dr, dc, n, bridge_flag)
+        
         print(self.grid.view('U1'))
+
+        if output_file:
+            try:
+                import os
+                os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    rows, cols = self.grid.shape
+                    for r in range(rows):
+                        row_chars = []
+                        for c in range(cols):
+                            char_val = chr(int(self.grid[r, c]))
+                            row_chars.append(char_val)
+                        
+                        f.write(" ".join(row_chars) + "\n")
+                
+                print(f"Solution saved to: {output_file}")
+            except IOError as e:
+                print(f"Error writing to file {output_file}: {e}")
     
     def export_cnf(self, output_filename):
         """
@@ -248,3 +273,4 @@ class Hashi:
             
         except IOError as e:
             print(f"An error occurred while writing to the file: {e}")
+            

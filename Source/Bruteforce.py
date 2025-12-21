@@ -6,13 +6,14 @@ import time
 class Bruteforce(BaseSolver):
     def __init__(self, fname):
         super().__init__(fname)
-        self.num_bridges, self.cnf = self.hashi.get_CNFs()
+        # self.num_bridges, self.cnfs = self.hashi.get_cnfss()
         set_stack_limit(200000)
 
     def solve(self):
         """
         Starts the recursive search from the first bridge variable.
         """
+        print(f"Starting bruteforce with {self.num_variables} bridge variables...")
         start_time = time.time()
         solution = self._recursive(1, [])
         end_time = time.time()
@@ -27,7 +28,7 @@ class Bruteforce(BaseSolver):
         """
         A recursive function that tries True/False for each variable.
         """
-        if var_idx > self.num_bridges:
+        if var_idx > self.num_variables:
             if self.hashi.is_singly_connected_component(assign):
                 return assign
             return None
@@ -45,11 +46,11 @@ class Bruteforce(BaseSolver):
 
     def _is_valid(self, current_assign):
         """
-        Checks if the current partial assignment violates any CNF clauses.
+        Checks if the current partial assignment violates any cnfs clauses.
         """
         assign_set = set(current_assign)
         
-        for clause in self.cnf:
+        for clause in self.cnfs:
             clause_is_dead = True
             
             for literal in clause:
