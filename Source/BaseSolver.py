@@ -1,14 +1,13 @@
 from abc import ABC, abstractmethod
-from Hashi import Hashi
+from Hashiwokakero import Hashiwokakero
 
 class BaseSolver(ABC):
     def __init__(self, fname):
-        self.hashi = Hashi(fname)
+        self.hashi = Hashiwokakero(fname)
         self.num_variables = self.hashi.get_number_of_variables()
         self.cnfs = self.hashi.get_CNFs()
         self.solution = None
 
-        # Metrics
         self.time_elapsed = 0.0
         self.memory_peak = 0.0
         self.nodes_expanded = 0 

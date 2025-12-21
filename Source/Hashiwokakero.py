@@ -1,5 +1,5 @@
 import numpy as np
-from pysat import card
+from pysat.card import CardEnc as PySatEncoder
 
 class DisjointSet:
     def __init__(self, num_nodes):
@@ -33,7 +33,7 @@ class DisjointSet:
         y = self._root(edge[1])
         return x != y and (x == root or y == root)
 
-class Hashi:
+class Hashiwokakero:
     def __init__(self, fname):
         self.fname = fname
         np.set_printoptions(linewidth=np.inf)
@@ -125,7 +125,7 @@ class Hashi:
             if max_possible < deg:
                 print(f"Invalid input: island at {self.islands[i][:2]} needs {deg} bridges but can have at most {max_possible}.")
                 exit()
-            sum_cnfs = card.CardEnc.equals(lits=self.edges[i], bound=deg, top_id=top_index)
+            sum_cnfs = PySatEncoder.equals(lits=self.edges[i], bound=deg, top_id=top_index)
             top_index = sum_cnfs.nv
             self.CNFs.extend(sum_cnfs.clauses)
     
@@ -204,7 +204,6 @@ class Hashi:
         return cut_set
 
     def print_solution(self, result):
-        # output_file = self.fname.replace("Inputs", "Outputs").replace("input", "output")
         self.export_cnf("Outputs/constraints.cnf")
         output_file = "Outputs/solution.txt"
         if len(result) < self.num_bridges:

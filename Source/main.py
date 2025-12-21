@@ -6,7 +6,7 @@ import csv
 import re
 from pathlib import Path
 import shutil
-# Import Solvers
+
 from Bruteforce import Bruteforce
 from Backtracking import Backtracking
 from AStarSolver import AStarSolver
@@ -83,7 +83,7 @@ def _update_stats_csv(file_path, input_filename, algo_name, node_val, puzzle_inf
     # Mapping tên thuật toán sang tên cột
     col_map = {
         'Bruteforce': 'Bruteforce Nodes',
-        'Backtracking': 'Backtracking Iters',
+        'Backtracking': 'Backtracking Iterations',
         'AStar': 'AStar Nodes',
         'PySAT': 'PySAT'
     }

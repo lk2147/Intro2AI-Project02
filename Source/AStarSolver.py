@@ -1,5 +1,4 @@
 import heapq
-import time
 from BaseSolver import BaseSolver
 from collections import defaultdict
 
@@ -8,134 +7,81 @@ class CNFState:
     Represents the state of a node in the A* search tree.
     """
     def __init__(self, assignment, unsatisfied_indices, conflict=False):
-        # assignment: Dict storing assigned variables {variable: True/False}
         self.assignment = assignment
-        
-        # unsatisfied_indices: Set containing indices of clauses NOT yet satisfied.
-        # Our goal is to make this set empty.
         self.unsatisfied_indices = unsatisfied_indices
-        
-        # conflict: Flag marking if this state is contradictory (dead end)
         self.conflict = conflict
-        
-        # h(n): Heuristic - Number of unsatisfied clauses.
-        # This is an admissible heuristic because we need at least 1 assignment to resolve 1 clause.
         self.h = len(unsatisfied_indices)
-        
-        # g(n): Cost - Number of assigned variables.
         self.g = len(assignment)
-        self.f = self.g + 5 * self.h  # f(n) = g(n) + h(n)
+        self.f = self.g + self.h
         
     def __lt__(self, other):
-        # Prioritize based on f = g + h
+        """
+        Compare function, return true if the smaller f = g + h is prioritized.
+        If f is equal, prioritize the one with smaller h because solving SAT mean finding the fastest way to get to the solution.
+        If h is equal, prioritize the one with greater g because resolving more variables mean closer to either the solution or dead end.
+        """
         if self.f != other.f:
             return self.f < other.f
-        # Prioritize smallest h (Greedy Best-First Search).
-        # In SAT, we care about finding a solution fastest, not necessarily the shortest path,
-        # so prioritizing h is more important than g.
         if self.h != other.h:
             return self.h < other.h
-        # If h is equal, prioritize states with more assigned variables (go deeper)
         return self.g > other.g
 
 class AStarSolver(BaseSolver):
     def __init__(self, fname):
         super().__init__(fname)
-        # 2. Pre-processing - Optimize access speed
-        # Map: Variable -> List of indices of clauses containing that variable
-        # Example: self.var_to_clauses[1] = [0, 5, 8] (Variable 1 appears in clauses 0, 5, 8)
         self.var_to_clauses = defaultdict(list)
         for idx, clause in enumerate(self.cnfs):
             for lit in clause:
                 self.var_to_clauses[abs(lit)].append(idx)
 
     def solve(self):
-        start_time = time.time()
-        
-        # --- INITIALIZATION ---
         initial_assignment = {}
-        # Initially, all clauses are unsatisfied
-        all_clause_indices = set(range(len(self.cnfs)))
-        # print(all_clause_indices)
-        
-        # Perform Unit Propagation from the start (handle existing unit clauses)
+        all_clause_indices = set(range(len(self.cnfs)))        
         initial_assignment, initial_unsatisfied, is_conflict = self._propagate(
             initial_assignment, all_clause_indices
         )
-        
         if is_conflict:
             print("CNF Unsatisfiable immediately after initial propagation.")
             return False
 
         start_node = CNFState(initial_assignment, initial_unsatisfied)
-        
-        # Priority Queue for A*
         open_set = []
         heapq.heappush(open_set, start_node)
-        
         self.nodes_expanded = 0
         
-        print("Start searching with A*...")
-
-        # --- MAIN LOOP ---
         while open_set:
             current = heapq.heappop(open_set)
             self.nodes_expanded += 1
             
-            # --- 1. GOAL CHECK ---
             if current.h == 0:
-                # SAT solution found (logically satisfied)
-                # Convert to solution format
                 solution_list = self._build_solution_list(current.assignment)
-                
-                # Check Connectivity (Global Connectivity Constraint)
-                # Since CNF only ensures local logic, we need to check if the graph is connected.
                 if self.hashi.is_singly_connected_component(solution_list):
                     self.solution = solution_list
-                    # print(f"Nodes explored: {nodes_explored}")
                     return True
                 else:
-                    # If not connected -> This solution is invalid graph-wise -> Skip
                     continue
 
-            # --- 2. VARIABLE SELECTION HEURISTIC ---
-            # Select the best variable to branch.
-            # We use MOMs strategy: Select the variable appearing most in the shortest clauses.
-            var_to_branch = self._select_variable_moms(current)
-            
+            var_to_branch = self._select_variable_moms(current)            
             if var_to_branch is None:
-                continue # Deadend
+                continue
 
-            # --- 3. EXPANSION ---
-            # Try assigning True and False to the selected variable
             for value in [True, False]:
-                
-                # Copy old state to create a new branch
                 new_assignment = current.assignment.copy()
                 new_assignment[var_to_branch] = value
-                
-                # Update temporary list of unsatisfied clauses
-                # (No need to propagate yet, just update the state of the newly assigned variable)
                 temp_unsatisfied, conflict_detected = self._update_clauses_status(
                     current.unsatisfied_indices, var_to_branch, value
                 )
-                
                 if conflict_detected:
-                    continue # Prune this branch immediately
+                    continue
 
-                # --- 4. UNIT PROPAGATION ---
-                # This is the most important OPTIMIZATION step.
-                # From the newly assigned variable, automatically infer other variables that must follow.
                 final_assignment, final_unsatisfied, prop_conflict = self._propagate(
                     new_assignment, temp_unsatisfied
-                )
-                
+                )                
                 if not prop_conflict:
-                    # If no conflict, add new node to the queue
                     new_node = CNFState(final_assignment, final_unsatisfied)
                     heapq.heappush(open_set, new_node)
-
-        print(f"No solution found. Nodes explored: {nodes_explored}")
+                    
+        print(f"No solution found. Nodes explored: {self.nodes_expanded}")
         return False
 
     def _propagate(self, assignment, unsatisfied_indices):
@@ -147,7 +93,6 @@ class AStarSolver(BaseSolver):
         Output: (new assignment, new unsatisfied, is_conflict)
         """
         curr_assignment = assignment
-        # print(curr_assignment)
         curr_unsatisfied = unsatisfied_indices
         
         while True:

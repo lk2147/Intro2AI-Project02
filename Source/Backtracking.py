@@ -1,6 +1,5 @@
-from BaseSolver import BaseSolver
 from sys import setrecursionlimit as set_stack_limit
-from time import time as set_clock
+from BaseSolver import BaseSolver
 
 class Backtracking(BaseSolver):
     def __init__(self, fname, max_iterations = 10):
@@ -16,7 +15,6 @@ class Backtracking(BaseSolver):
             print("Empty CNF.")
             return True
         
-        start_time = set_clock()
         for _ in range(self.max_iterations):
             self.solution = self._DPLL(self.cnfs.copy(), [])
             if self.solution is None:
@@ -25,8 +23,7 @@ class Backtracking(BaseSolver):
             self.solution.sort(key=lambda x: abs(x))
             blocking_clause = self.hashi.get_cut_set(self.solution)
             if blocking_clause is None:
-                end_time = set_clock()
-                print(f"Solution found in {end_time - start_time:.4f} seconds after {_+1} iterations.")
+                print(f"Solution found after {_+1} iterations.")
                 return True
             elif blocking_clause:
                 self.cnfs.append(blocking_clause)

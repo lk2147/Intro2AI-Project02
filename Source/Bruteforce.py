@@ -1,26 +1,17 @@
-from BaseSolver import BaseSolver
 from sys import setrecursionlimit as set_stack_limit
-import sys
-import time
+from BaseSolver import BaseSolver
 
 class Bruteforce(BaseSolver):
     def __init__(self, fname):
         super().__init__(fname)
-        # self.num_bridges, self.cnfs = self.hashi.get_cnfss()
         set_stack_limit(200000)
 
     def solve(self):
         """
         Starts the recursive search from the first bridge variable.
         """
-        print(f"Starting bruteforce with {self.num_variables} bridge variables...")
-        start_time = time.time()
-        solution = self._recursive(1, [])
-        end_time = time.time()
-        
-        if solution:
-            self.solution = solution
-            print(f"Solution found in {end_time - start_time:.4f} seconds.")
+        self.solution = self._recursive(1, [])        
+        if self.solution:
             return True
         return False
 
@@ -35,7 +26,7 @@ class Bruteforce(BaseSolver):
 
         if self._is_valid(assign + [var_idx]):
             result = self._recursive(var_idx + 1, assign + [var_idx])
-            if result: 
+            if result:
                 return result
 
         if self._is_valid(assign + [-var_idx]):
