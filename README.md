@@ -2,6 +2,15 @@
 - **Môn học:** CSC14003 - Nhập môn Trí tuệ nhân tạo (AI)
 - **Ngôn ngữ:** Python 3.7+
 
+## Team Members
+
+| Student ID | Full Name      |
+|------------|----------------|
+| `23120004` | Nguyễn Trọng Doanh |
+| `23120052` | Nguyễn Lê Khánh |
+| `23120254` | Trịnh Thị Thu Hiền |
+| `23120421` | Hồ Thùy Trâm |
+
 ## 1. Giới thiệu
 
 Dự án này tập trung vào việc giải quyết trò chơi logic **Hashiwokakero** (Bridges) bằng các phương pháp khác nhau. Mục tiêu là kết nối các đảo bằng các cây cầu sao cho số lượng cầu tại mỗi đảo khớp với con số ghi trên đảo đó và tất cả các đảo tạo thành một thành phần liên thông duy nhất.
