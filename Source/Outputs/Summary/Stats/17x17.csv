@@ -1,6 +1,6 @@
-Input File,Islands,Variables,Clauses,Bruteforce Nodes,Backtracking Iters,AStar Nodes,PySAT
-input-01.txt,100,332,3825,,,52,
-input-02.txt,92,300,3471,,,43,
-input-03.txt,98,324,3902,,,812,
-input-04.txt,100,332,4092,,,887,
-input-05.txt,99,328,4108,,,484,
+Input File,Islands,Variables,Clauses,Bruteforce Nodes,Backtracking Iterations,AStar Nodes,PySAT Iterations
+input-01.txt,100,332,3825,,1,52,1
+input-02.txt,92,300,3471,,1,43,1
+input-03.txt,98,324,3931,,1,637,3
+input-04.txt,100,332,4092,,1,887,1
+input-05.txt,99,328,4108,,1,484,1

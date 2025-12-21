@@ -72,11 +72,11 @@ def _update_stats_csv(file_path, input_filename, algo_name, node_val, puzzle_inf
     fieldnames = [
         'Input File', 
         'Islands', 'Variables', 'Clauses',
-        'Bruteforce Nodes', 'Backtracking Iters', 'AStar Nodes', 'PySAT'
+        'Bruteforce Nodes', 'Backtracking Iterations', 'AStar Nodes', 'PySAT Iterations'
     ]
     
     col_map = {
-        'Bruteforce': 'Bruteforce',
+        'Bruteforce': 'Bruteforce Nodes',
         'Backtracking': 'Backtracking Iterations',
         'AStar': 'AStar Nodes',
         'PySAT': 'PySAT Iterations'
@@ -180,11 +180,7 @@ def main():
     time_elapsed = end_time - start_time
     memory_peak_mb = peak_mem / (1024 * 1024)
     
-    metric_val = None
-    if args.algorithm == 'astar' and hasattr(solver, 'nodes_expanded'):
-        metric_val = solver.nodes_expanded
-    elif args.algorithm == 'pysat' and hasattr(solver, 'nodes_expanded'):
-        metric_val = solver.nodes_expanded
+    metric_val = solver.nodes_expanded
 
     if result:
         print(f"SOLVED! Time: {time_elapsed:.4f}s | Memory: {memory_peak_mb:.4f}MB")
