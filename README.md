@@ -36,6 +36,7 @@ Dự án triển khai 4 thuật toán chính để so sánh:
     ├── AStarSolver.py          # Thuật toán A* cho SAT
     ├── Backtracking.py         # Thuật toán quay lui (DPLL + Unit Propagation)
     ├── Bruteforce.py           # Thuật toán tìm kiếm vét cạn
+    ├── PySATSolver.py          # Thuật toán của PySAT
     ├── visualize.py            # Script vẽ biểu đồ so sánh Time/Memory (với Time, trục Y sử dụng Log Scale)
     ├── README.txt              # File hướng dẫn chạy chương trình
     ├── Inputs/                 # Thư mục chứa các file input mẫu (.txt) phân loại theo size
