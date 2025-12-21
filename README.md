@@ -7,34 +7,40 @@
 Dự án này tập trung vào việc giải quyết trò chơi logic **Hashiwokakero** (Bridges) bằng các phương pháp khác nhau. Mục tiêu là kết nối các đảo bằng các cây cầu sao cho số lượng cầu tại mỗi đảo khớp với con số ghi trên đảo đó và tất cả các đảo tạo thành một thành phần liên thông duy nhất.
 
 Dự án triển khai 4 thuật toán chính để so sánh:
-*   **Bruteforce:** Tìm kiếm vét cạn kết hợp kiểm tra ràng buộc.
-*   **Backtracking (DPLL):** Quay lui kết hợp lan truyền đơn vị dựa trên mệnh đề logic dạng chuẩn hội.
-*   **A\* Search:** Tìm kiếm tối ưu với hàm heuristic dựa trên số lượng mệnh đè chưa thỏa mãn.
-*   **PySAT:** Sử dụng thư viện SAT solver của python để giải quyết bài toán biểu diễn ở dạng chuẩn hội.
+-   **Bruteforce:** Tìm kiếm vét cạn kết hợp kiểm tra ràng buộc.
+-   **Backtracking (DPLL):** Quay lui kết hợp lan truyền đơn vị dựa trên mệnh đề logic dạng chuẩn hội.
+-   **A\* Search:** Tìm kiếm tối ưu với hàm heuristic dựa trên số lượng mệnh đè chưa thỏa mãn.
+-   **PySAT:** Sử dụng thư viện SAT solver của python để giải quyết bài toán biểu diễn ở dạng chuẩn hội.
 
 
 ## 2. Cấu trúc mã nguồn
 ```
 .
-├── main.py                 # File thực thi chính (CLI), chạy các solver
-├── Hashiwokakero.py        # Định nghĩa bài toán, sinh ràng buộc CNF, kiểm tra liên thông
-├── BaseSolver.py           # Lớp trừu tượng (Abstract Class) cho các thuật toán giải
-├── AStarSolver.py          # Thuật toán A* cho SAT
-├── Backtracking.py         # Thuật toán quay lui (DPLL + Unit Propagation)
-├── Bruteforce.py           # Thuật toán tìm kiếm vét cạn
-├── visualize.py            # Script vẽ biểu đồ so sánh Time/Memory (với Time, trục Y sử dụng Log Scale)
-├── Inputs/                 # Thư mục chứa các file input mẫu (.txt) phân loại theo size
-│   ├── 7x7/
-│   ├── 9x9/
-│   └── ...
-└── Outputs/                # Thư mục chứa kết quả sau khi chạy
-    ├── astar/              # Thư mục chứa output của thuật toán A*
-    ├── backtracking/       # Thư mục chứa output của thuật toán backtracking
-    ├── brute-force/        # Thư mục chứa output của thuật toán brute-force
-    ├── pysat/              # Thư mục chứa output khi dùng thư viện pySAT
-    ├── cnf/                # Các file ràng buộc logic định dạng DIMACS .cnf
-    ├── Summary/            # Các file .csv lưu thống kê Time, Memory, Stats
-    └── Visualization/      # Ảnh biểu đồ so sánh (.png)
+├── Docs/                       # Thư mục chứa các nguồn tài liệu 
+|   ├── External/               # Thư mục chứa các nguồn tài liệu tham khảo bên ngoài (từ web, ...)
+|   ├── ...
+|   └── Report.pdf              # Bài báo cáo đồ án của nhóm
+└── Source/
+    ├── main.py                 # File thực thi chính (CLI), chạy các solver
+    ├── Hashiwokakero.py        # Định nghĩa bài toán, sinh ràng buộc CNF, kiểm tra liên thông
+    ├── BaseSolver.py           # Lớp trừu tượng (Abstract Class) cho các thuật toán giải
+    ├── AStarSolver.py          # Thuật toán A* cho SAT
+    ├── Backtracking.py         # Thuật toán quay lui (DPLL + Unit Propagation)
+    ├── Bruteforce.py           # Thuật toán tìm kiếm vét cạn
+    ├── visualize.py            # Script vẽ biểu đồ so sánh Time/Memory (với Time, trục Y sử dụng Log Scale)
+    ├── README.txt              # File hướng dẫn chạy chương trình
+    ├── Inputs/                 # Thư mục chứa các file input mẫu (.txt) phân loại theo size
+    │   ├── 7x7/
+    │   ├── 9x9/
+    │   └── ...
+    └── Outputs/                # Thư mục chứa kết quả sau khi chạy
+        ├── astar/              # Thư mục chứa output của thuật toán A*
+        ├── backtracking/       # Thư mục chứa output của thuật toán backtracking
+        ├── brute-force/        # Thư mục chứa output của thuật toán brute-force
+        ├── pysat/              # Thư mục chứa output khi dùng thư viện pySAT
+        ├── cnf/                # Các file ràng buộc logic định dạng DIMACS .cnf
+        ├── Summary/            # Các file .csv lưu thống kê Time, Memory, Stats
+        └── Visualization/      # Ảnh biểu đồ so sánh (.png)
 ```
 
 **Note**: Ngoài ra còn 1 file **auto-run.py** tự động chạy tất cả các thuật toán
