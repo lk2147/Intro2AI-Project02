@@ -1,37 +1,32 @@
-import sys
-import time
 from pysat.solvers import Glucose4
-from hashi_logic import Hashiwokakero 
+from BaseSolver import BaseSolver
 
-class PySATSolver:
-    def __init__(self, input_file):
-        self.hashi = Hashiwokakero(input_file)
-        self.solver = Glucose4()
-        
+class PySATSolver(BaseSolver):
+    def __init__(self, fname):
+        """
+        Initialize SAT Solver and use Glucose4.
+        """
+        super().__init__(fname)
+        self.nodes_expanded = 0 
+
     def solve(self):
-        initial_cnfs = self.hashi.get_CNFs()
-        for clause in initial_cnfs:
-            self.solver.add_clause(clause)
-        
-        start_time = time.time()
-        iteration = 0
-        
+        """
+        Implement SAT Solver.
+        """
+        solver = Glucose4()
+        for clause in self.cnfs:
+            solver.add_clause(clause)  
+
         while True:
-            iteration += 1
-            is_sat = self.solver.solve()
-            
-            if is_sat:
-                model = self.solver.get_model()
-                cut_set = self.hashi.get_cut_set(model)
-                
-                if cut_set is None:
-                    end_time = time.time()
-                    print(f"Solution found after {iteration} iterations.")
-                    print(f"Time: {end_time - start_time:.4f} seconds.")
-                    self.hashi.print_solution(model)
-                    return True
-                else:
-                    self.solver.add_clause(cut_set)
-            else:
-                print("\nNo solution.")
+            is_sat = solver.solve()
+            if not is_sat:
                 return False
+            
+            model = solver.get_model()
+            cut_set = self.hashi.get_cut_set(model) 
+            if cut_set is None:
+                self.solution = model
+                return True
+            
+            solver.add_clause(cut_set)
+            self.nodes_expanded += 1
