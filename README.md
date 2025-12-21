@@ -1,7 +1,6 @@
 # Đồ án 02: Hashiwokakero Solver
-
-**Môn học:** CSC14003 - Nhập môn Trí tuệ nhân tạo (AI)
-**Ngôn ngữ:** Python 3.7+
+- **Môn học:** CSC14003 - Nhập môn Trí tuệ nhân tạo (AI)
+- **Ngôn ngữ:** Python 3.7+
 
 ## 1. Giới thiệu
 
