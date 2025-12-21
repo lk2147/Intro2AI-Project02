@@ -10,7 +10,7 @@ class BaseSolver(ABC):
 
         self.time_elapsed = 0.0
         self.memory_peak = 0.0
-        self.nodes_expanded = 0 
+        self.nodes_expanded = 0
 
     @abstractmethod
     def solve():

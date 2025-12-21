@@ -36,7 +36,6 @@ def _read_csv(file_path):
     return rows
 
 def _write_csv_data(file_path, fieldnames, rows):
-    # Sắp xếp theo tên file input-01, input-02...
     def sort_key(r):
         match = re.search(r'input-(\d+)', r['Input File'])
         return int(match.group(1)) if match else 0
@@ -70,22 +69,17 @@ def _update_simple_csv(file_path, input_filename, algo_col, value):
     _write_csv_data(file_path, fieldnames, rows)
 
 def _update_stats_csv(file_path, input_filename, algo_name, node_val, puzzle_info):
-    """
-    Dùng cho Stats: Lưu thêm thông tin bài toán (Islands, Vars, Clauses)
-    """
-    # Định nghĩa các cột
     fieldnames = [
         'Input File', 
-        'Islands', 'Variables', 'Clauses', # Thông tin bài toán
-        'Bruteforce Nodes', 'Backtracking Iters', 'AStar Nodes', 'PySAT' # Thông tin thuật toán
+        'Islands', 'Variables', 'Clauses',
+        'Bruteforce Nodes', 'Backtracking Iters', 'AStar Nodes', 'PySAT'
     ]
     
-    # Mapping tên thuật toán sang tên cột
     col_map = {
-        'Bruteforce': 'Bruteforce Nodes',
+        'Bruteforce': 'Bruteforce',
         'Backtracking': 'Backtracking Iterations',
         'AStar': 'AStar Nodes',
-        'PySAT': 'PySAT'
+        'PySAT': 'PySAT Iterations'
     }
     target_col = col_map.get(algo_name)
     
@@ -95,12 +89,10 @@ def _update_stats_csv(file_path, input_filename, algo_name, node_val, puzzle_inf
     row_updated = False
     for row in rows:
         if row['Input File'] == input_filename:
-            # Cập nhật thông tin bài toán (đề phòng chạy lần đầu chưa có)
             row['Islands'] = puzzle_info['islands']
             row['Variables'] = puzzle_info['variables']
             row['Clauses'] = puzzle_info['clauses']
             
-            # Cập nhật số node của thuật toán hiện tại
             if target_col:
                 row[target_col] = str(node_val)
             
@@ -129,16 +121,12 @@ def update_summary(input_path, algorithm_name, time_val, mem_val, node_val, puzz
     
     csv_name = f"{parent_dir}.csv"
     
-    # 1. Update Time
     time_csv = os.path.join("Outputs", "Summary", "Time", csv_name)
     _update_simple_csv(time_csv, filename, algorithm_name, f"{time_val:.4f}")
     
-    # 2. Update Memory
     mem_csv = os.path.join("Outputs", "Summary", "Memory", csv_name)
     _update_simple_csv(mem_csv, filename, algorithm_name, f"{mem_val:.4f}")
     
-    # 3. Update Stats (Nodes + Info)
-    # Luôn cập nhật stats để ghi info bài toán kể cả khi thuật toán k có node count
     stats_csv = os.path.join("Outputs", "Summary", "Stats", csv_name)
     _update_stats_csv(stats_csv, filename, algorithm_name, node_val if node_val is not None else "", puzzle_info)
     
@@ -164,21 +152,18 @@ def main():
 
     print(f"Running {algo_display} on {args.file}...")
 
-    # 1. Khởi tạo
     try:
         solver = get_solver(args.algorithm, args.file)
     except Exception as e:
         print(f"Error initializing solver: {e}")
         return
 
-    # Lấy thông tin bài toán ngay sau khi init
     puzzle_info = {
         'islands': solver.hashi.num_islands,
         'variables': solver.hashi.get_number_of_variables(),
         'clauses': len(solver.hashi.CNFs)
     }
 
-    # 2. Chạy
     tracemalloc.start()
     start_time = time.time()
     
@@ -195,14 +180,12 @@ def main():
     time_elapsed = end_time - start_time
     memory_peak_mb = peak_mem / (1024 * 1024)
     
-    # Lấy thông số đặc thù của từng thuật toán
     metric_val = None
     if args.algorithm == 'astar' and hasattr(solver, 'nodes_expanded'):
         metric_val = solver.nodes_expanded
     elif args.algorithm == 'pysat' and hasattr(solver, 'nodes_expanded'):
         metric_val = solver.nodes_expanded
 
-    # 3. Kết quả
     if result:
         print(f"SOLVED! Time: {time_elapsed:.4f}s | Memory: {memory_peak_mb:.4f}MB")
         solver.print_hashi() 
@@ -218,7 +201,6 @@ def main():
     else:
         print("NO SOLUTION FOUND.")
 
-    # 4. Lưu
     update_summary(args.file, algo_display, time_elapsed, memory_peak_mb, metric_val, puzzle_info)
 
 if __name__ == "__main__":

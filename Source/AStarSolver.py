@@ -47,7 +47,6 @@ class AStarSolver(BaseSolver):
         start_node = CNFState(initial_assignment, initial_unsatisfied)
         open_set = []
         heapq.heappush(open_set, start_node)
-        self.nodes_expanded = 0
         
         while open_set:
             current = heapq.heappop(open_set)
@@ -96,9 +95,8 @@ class AStarSolver(BaseSolver):
         curr_unsatisfied = unsatisfied_indices
         
         while True:
-            unit_vars = {} # Store variables that must be assigned: {var: value}
+            unit_vars = {}
             
-            # Iterate through unsatisfied clauses
             for idx in curr_unsatisfied:
                 clause = self.cnfs[idx]
                 
@@ -108,8 +106,6 @@ class AStarSolver(BaseSolver):
                 for lit in clause:
                     var = abs(lit)
                     if var in curr_assignment:
-                        # If variable is assigned and makes the clause True
-                        # print(curr_assignment[var])
                         if curr_assignment[var] == (lit > 0):
                             is_satisfied = True
                             break
@@ -119,32 +115,24 @@ class AStarSolver(BaseSolver):
                 if is_satisfied:
                     continue
                 
-                # If clause is unsatisfied and no variables left -> Conflict
                 if len(unassigned_lits) == 0:
                     return curr_assignment, curr_unsatisfied, True
                 
-                # If only exactly 1 variable remains unassigned -> This is a Unit Clause
                 if len(unassigned_lits) == 1:
                     lit = unassigned_lits[0]
-                    # Mandatory assignment to make clause True
                     val = (lit > 0)
                     var = abs(lit)
-                    # print("var:", var, "must be", val)
                     
-                    # Check for conflicts with previous inferences in the loop
                     if var in unit_vars and unit_vars[var] != val:
                         return curr_assignment, curr_unsatisfied, True
                     
                     unit_vars[var] = val
 
-            # If no new variables found to infer -> Stop (Fixed point)
             if not unit_vars:
                 break
             
-            # Apply newly inferred variables to assignment
             for var, val in unit_vars.items():
                 curr_assignment[var] = val
-                # Update clause list based on newly assigned variable
                 curr_unsatisfied, conflict = self._update_clauses_status(
                     curr_unsatisfied, var, val
                 )
@@ -159,77 +147,44 @@ class AStarSolver(BaseSolver):
         Returns: (new set, boolean is_conflict)
         """
         new_unsatisfied = set()
-        
-        # Only need to check clauses containing var (use index map for speed)
-        # But for simplicity and accuracy with the shrinking unsatisfied set, we iterate over unsatisfied.
-        # (Can be optimized by intersecting current_unsatisfied and self.var_to_clauses[var])
-        
-        affected_clauses = current_unsatisfied
-        
+        affected_clauses = current_unsatisfied        
         for idx in affected_clauses:
             clause = self.cnfs[idx]
             
-            # Check clause status
-            is_satisfied = False
-            has_unassigned = False
-            
+            is_satisfied = False            
             for lit in clause:
                 l_var = abs(lit)
                 
                 if l_var == var:
-                    # Variable just assigned
                     if (lit > 0) == val:
                         is_satisfied = True
                         break
-                # Previously assigned variables don't need assignment dict check 
-                # because if it made the clause True, the clause wouldn't be in current_unsatisfied
-                # We only care if the clause becomes completely False.
                 elif l_var not in self.var_to_clauses: 
-                    # Virtual logic: var_to_clauses contains all variables. 
-                    # If l_var is unassigned, it remains unassigned.
-                    # Correct check: need access to global assignment, but costly.
-                    # Since we are in the propagation flow, we know other variables in this clause 
-                    # are either assigned False or unassigned.
                     pass
             
             if is_satisfied:
                 continue
-
-            # If not satisfied, we must ensure it hasn't Failed
-            # (Meaning there's still at least 1 unassigned or True literal)
-            # Since we don't pass assignment here for optimization, exact conflict check 
-            # is done in _propagate (counting unassigned_lits).
-            # In this function, we only filter out clauses that have become True.
             new_unsatisfied.add(idx)
-            
         return new_unsatisfied, False
 
     def _select_variable_moms(self, state):
         """
-        MOMs Variable Selection Heuristic (Maximum Occurrences in Minimum length clauses).
-        Select the variable appearing most in the shortest clauses (smallest size).
-        Goal: Trigger Unit Propagation or Conflict earliest.
+        Apply MOMs Variable Selection Heuristic (Maximum Occurrences in Minimum length clauses).
         """
         min_len = float('inf')
         counts = defaultdict(int)
         
-        # 1. Find the smallest length among unsatisfied clauses
-        # Simultaneously count frequency
-        candidates = []
-        
         for idx in state.unsatisfied_indices:
             clause = self.cnfs[idx]
             
-            # Count number of unassigned literals in this clause
             unassigned = [lit for lit in clause if abs(lit) not in state.assignment]
             length = len(unassigned)
-            
-            if length == 0: continue # Conflict detected (should have been filtered earlier)
+            if length == 0: continue
             
             if length < min_len:
                 min_len = length
-                candidates = [] # Reset candidates
-                counts.clear() # Reset counts because we only care about min_len
+                candidates = []
+                counts.clear()
             
             if length == min_len:
                 candidates.append(unassigned)
@@ -237,17 +192,13 @@ class AStarSolver(BaseSolver):
                     counts[abs(lit)] += 1
         
         if not counts:
-            # Rare case: Clauses remain but no unassigned variables (Conflict)
-            return None
-            
-        # 2. Select variable with highest occurrence count
+            return None            
         return max(counts, key=counts.get)
 
     def _build_solution_list(self, assignment):
-        """Convert dict {1:True, 2:False} to list [1, -2, ...]"""
         sol = []
         for i in range(1, self.num_variables + 1):
-            val = assignment.get(i, False) # Default to False if variable is insignificant
+            val = assignment.get(i, False)
             if val:
                 sol.append(i)
             else:

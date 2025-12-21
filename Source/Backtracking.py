@@ -16,6 +16,7 @@ class Backtracking(BaseSolver):
             return True
         
         for _ in range(self.max_iterations):
+            self.nodes_expanded += 1
             self.solution = self._DPLL(self.cnfs.copy(), [])
             if self.solution is None:
                 return False
@@ -23,7 +24,6 @@ class Backtracking(BaseSolver):
             self.solution.sort(key=lambda x: abs(x))
             blocking_clause = self.hashi.get_cut_set(self.solution)
             if blocking_clause is None:
-                print(f"Solution found after {_+1} iterations.")
                 return True
             elif blocking_clause:
                 self.cnfs.append(blocking_clause)

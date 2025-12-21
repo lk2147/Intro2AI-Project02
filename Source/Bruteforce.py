@@ -19,6 +19,7 @@ class Bruteforce(BaseSolver):
         """
         A recursive function that tries True/False for each variable.
         """
+        self.nodes_expanded += 1
         if var_idx > self.num_variables:
             if self.hashi.is_singly_connected_component(assign):
                 return assign
