@@ -1,8 +1,10 @@
 # Đồ án 02: Hashiwokakero Solver
+
 **Môn học:** CSC14003 - Nhập môn Trí tuệ nhân tạo (AI)
 **Ngôn ngữ:** Python 3.7+
 
 ## 1. Giới thiệu
+
 Dự án này tập trung vào việc giải quyết trò chơi logic **Hashiwokakero** (Bridges) bằng các phương pháp khác nhau. Mục tiêu là kết nối các đảo (island) bằng các cây cầu sao cho số lượng cầu tại mỗi đảo khớp với con số ghi trên đảo đó và tất cả các đảo tạo thành một thành phần liên thông duy nhất.
 
 Dự án triển khai 4 thuật toán chính để so sánh:
@@ -11,7 +13,6 @@ Dự án triển khai 4 thuật toán chính để so sánh:
 *   **A\* Search:** Tìm kiếm tối ưu với hàm heuristic dựa trên số lượng clause chưa thỏa mãn.
 *   **PySAT:** Sử dụng thư viện SAT solver của python để giải quyết bài toán dưới dạng CNF.
 
----
 
 ## 2. Cấu trúc mã nguồn
 ```
@@ -36,8 +37,9 @@ Dự án triển khai 4 thuật toán chính để so sánh:
     ├── Summary/            # Các file .csv lưu thống kê Time, Memory, Stats
     └── Visualization/      # Ảnh biểu đồ so sánh (.png)
 ```
+
 **Note**: Ngoài ra còn 1 file **auto-run.py** tự động chạy tất cả các thuật toán
----
+
 
 ## 3. Cài đặt môi trường
 Dự án yêu cầu các thư viện xử lý dữ liệu và logic mệnh đề. Bạn có thể cài đặt thông qua `pip`:
@@ -46,7 +48,6 @@ Dự án yêu cầu các thư viện xử lý dữ liệu và logic mệnh đề
 pip install numpy python-sat pandas matplotlib
 ```
 
----
 
 ## 4. Hướng dẫn chạy chương trình
 
@@ -78,7 +79,6 @@ python visualize.py
 *   **Kết quả:** Ảnh so sánh sẽ được lưu tại `Outputs/Visualization/`.
 *   **Lưu ý:** Biểu đồ thời gian sử dụng **Thang đo Log (Log Scale)** để thể hiện rõ sự chênh lệch giữa các thuật toán.
 
----
 
 ## 5. Các thuật toán triển khai
 
@@ -87,9 +87,9 @@ python visualize.py
 3.  **Backtracking:** Cải tiến với kỹ thuật Unit Propagation để cắt tỉa không gian tìm kiếm sớm, đặc biệt hiệu quả khi số lượng biến lớn.
 4.  **Connectivity Check:** Vì CNF chỉ đảm bảo các ràng buộc cục bộ, một bước kiểm tra hậu kỳ (Singly Connected Component) bằng Disjoint Set (DSU) được thực hiện để đảm bảo tính liên thông toàn cầu.
 
----
 
 ## 6. Kết quả thống kê
+
 Mọi kết quả về:
 *   **Thời gian thực thi (ms)**
 *   **Bộ nhớ tiêu thụ (MB)**
